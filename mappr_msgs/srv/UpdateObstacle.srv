@@ -1,0 +1,3 @@
+mappr_msgs/Obstacle obstacle
+---
+bool success

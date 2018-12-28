@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mappr_data</name>
+  <version>0.0.1</version>
+  <description>stuff</description>
+  <maintainer email="lruegeme@techfak.uni-bielefeld.de">Leroy Ruegemer</maintainer>
+  <license>Apache 2.0</license>
+
+  <author>Leroy Ruegemer</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+</package>

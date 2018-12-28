@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mappr</name>
+  <version>0.0.1</version>
+  <description>metapkg</description>
+  <maintainer email="lruegeme@techfak.uni-bielefeld.de">Leroy Ruegemer</maintainer>
+  <license>Apache 2.0</license>
+
+  <author>Leroy Ruegemer</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>mappr_server</exec_depend>
+  <exec_depend>mappr_msgs</exec_depend>
+  <exec_depend>mappr_rviz</exec_depend>
+
+  <export>
+    <metapackage />
+  </export>
+</package>
