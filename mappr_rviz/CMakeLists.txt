@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.1)
 project(mappr_rviz)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ## Catkin
 find_package(catkin REQUIRED
@@ -23,7 +26,6 @@ add_definitions(-DQT_NO_KEYWORDS)
 #set(CMAKE_AUTOMOC ON)
 
 ## Etc
-add_definitions(-std=gnu++11)
 include_directories(include)
 
 ###########
@@ -33,6 +35,7 @@ set(src_files
   src/location_display.cpp
   src/location_array_display.cpp
   src/location_visual.cpp
+  src/interactive_node.cpp
   )
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -40,7 +43,9 @@ qt_wrap_cpp(${PROJECT_NAME}
   moc_files 
   include/mappr_rviz/topic_display.h 
   include/mappr_rviz/location_display.h 
-  include/mappr_rviz/location_array_display.h)
+  include/mappr_rviz/location_array_display.h
+  include/mappr_rviz/interactive_node.h
+  )
 
 add_library(${PROJECT_NAME} ${src_files} ${moc_files})
 

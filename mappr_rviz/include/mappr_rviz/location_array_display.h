@@ -6,39 +6,44 @@
 #include "rviz/message_filter_display.h"
 #endif
 
-namespace Ogre {
+namespace Ogre
+{
 class SceneNode;
 }
 
-namespace rviz {
+namespace rviz
+{
 class BoolProperty;
 }
 
-namespace mappr {
-namespace viz {
-class LocationArrayDisplay : public rviz::Display {
+namespace mappr
+{
+namespace viz
+{
+class LocationArrayDisplay : public rviz::Display
+{
   Q_OBJECT
 public:
   LocationArrayDisplay();
-  virtual ~LocationArrayDisplay() = default;
+  ~LocationArrayDisplay() override = default;
 
 protected:
-  virtual void onInitialize();
-  virtual void reset();
+  void onInitialize() override;
+  void reset() override;
 
 private Q_SLOTS:
   void slotShowLabels();
 
 private:
-  void processMessage(const mappr_msgs::LocationArray::ConstPtr &msg);
+  void processMessage(const mappr_msgs::LocationArray::ConstPtr& msg);
 
   bool initialized;
-  void firstMessage(const mappr_msgs::LocationArray::ConstPtr &msg);
+  void firstMessage(const mappr_msgs::LocationArray::ConstPtr& msg);
 
   mappr_msgs::LocationArray::ConstPtr initMsg_;
-  rviz::BoolProperty *showLabels_;
+  rviz::BoolProperty* showLabels_;
 
   std::unique_ptr<LocationVisual> locationVis_;
 };
-} // namespace viz
-} // namespace mappr
+}  // namespace viz
+}  // namespace mappr

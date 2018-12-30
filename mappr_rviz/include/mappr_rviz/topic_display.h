@@ -17,29 +17,30 @@
 
 #include "rviz/display.h"
 
-namespace mappr {
-namespace viz {
-
+namespace mappr
+{
+namespace viz
+{
 /** @brief Helper superclass for MessageFilterDisplay, needed because
  * Qt's moc and c++ templates don't work nicely together.  Not
  * intended to be used directly. */
-class _RosTopicDisplay : public rviz::Display {
+class _RosTopicDisplay : public rviz::Display
+{
   Q_OBJECT
 public:
-  _RosTopicDisplay() {
-    topic_property_ = new rviz::RosTopicProperty("Topic", "", "", "", this,
-                                                 SLOT(updateTopic()));
-    unreliable_property_ = new rviz::BoolProperty("Unreliable", false,
-                                                  "Prefer UDP topic transport",
-                                                  this, SLOT(updateTopic()));
+  _RosTopicDisplay()
+  {
+    topic_property_ = new rviz::RosTopicProperty("Topic", "", "", "", this, SLOT(updateTopic()));
+    unreliable_property_ =
+        new rviz::BoolProperty("Unreliable", false, "Prefer UDP topic transport", this, SLOT(updateTopic()));
   }
 
 protected Q_SLOTS:
   virtual void updateTopic() = 0;
 
 protected:
-  rviz::RosTopicProperty *topic_property_;
-  rviz::BoolProperty *unreliable_property_;
+  rviz::RosTopicProperty* topic_property_;
+  rviz::BoolProperty* unreliable_property_;
 };
 
 /** @brief Display subclass using a tf2_ros::MessageFilter, templated on the ROS
@@ -49,68 +50,88 @@ protected:
  * types.  It has a tf2_ros::MessageFilter to filter incoming messages, and
  * it handles subscribing and unsubscribing when the display is
  * enabled or disabled.  It also has an Ogre::SceneNode which  */
-template <class MessageType> class TopicDisplay : public _RosTopicDisplay {
+template <class MessageType>
+class TopicDisplay : public _RosTopicDisplay
+{
   // No Q_OBJECT macro here, moc does not support Q_OBJECT in a templated class.
 public:
   /** @brief Convenience typedef so subclasses don't have to use
    * the long templated class name to refer to their super class. */
-  typedef TopicDisplay<MessageType> TDClass;
+  using TDClass = TopicDisplay<MessageType>;
 
-  TopicDisplay() : messages_received_(0) {
-    QString message_type =
-        QString::fromStdString(ros::message_traits::datatype<MessageType>());
+  TopicDisplay()
+  {
+    QString message_type = QString::fromStdString(ros::message_traits::datatype<MessageType>());
     topic_property_->setMessageType(message_type);
     topic_property_->setDescription(message_type + " topic to subscribe to.");
   }
 
-  virtual void onInitialize() {}
+  void onInitialize() override
+  {
+  }
 
-  virtual ~TopicDisplay() { unsubscribe(); }
+  ~TopicDisplay() override
+  {
+    unsubscribe();
+  }
 
-  virtual void reset() {
+  void reset() override
+  {
     rviz::Display::reset();
     messages_received_ = 0;
   }
 
-  virtual void setTopic(const QString &topic, const QString &datatype) {
+  void setTopic(const QString& topic, const QString& datatype) override
+  {
     topic_property_->setString(topic);
   }
 
 protected:
-  virtual void updateTopic() {
+  void updateTopic() override
+  {
     unsubscribe();
     reset();
     subscribe();
     context_->queueRender();
   }
 
-  virtual void subscribe() {
-    if (!isEnabled()) {
+  virtual void subscribe()
+  {
+    if (!isEnabled())
+    {
       return;
     }
 
-    try {
+    try
+    {
       ros::TransportHints transport_hint = ros::TransportHints().reliable();
       // Determine UDP vs TCP transport for user selection.
-      if (unreliable_property_->getBool()) {
+      if (unreliable_property_->getBool())
+      {
         transport_hint = ros::TransportHints().unreliable();
       }
-      sub_.subscribe(update_nh_, topic_property_->getTopicStd(), 10,
-                     transport_hint);
-      sub_.registerCallback(
-          boost::bind(&TopicDisplay<MessageType>::incomingMessage, this, _1));
+      sub_.subscribe(update_nh_, topic_property_->getTopicStd(), 10, transport_hint);
+      sub_.registerCallback(boost::bind(&TopicDisplay<MessageType>::incomingMessage, this, _1));
       setStatus(rviz::StatusProperty::Warn, "Topic", "no msgs");
-    } catch (ros::Exception &e) {
-      setStatus(rviz::StatusProperty::Error, "Topic",
-                QString("Error subscribing: ") + e.what());
+    }
+    catch (ros::Exception& e)
+    {
+      setStatus(rviz::StatusProperty::Error, "Topic", QString("Error subscribing: ") + e.what());
     }
   }
 
-  virtual void unsubscribe() { sub_.unsubscribe(); }
+  virtual void unsubscribe()
+  {
+    sub_.unsubscribe();
+  }
 
-  virtual void onEnable() { subscribe(); }
+  void onEnable() override
+  {
+    subscribe();
+  }
 
-  virtual void onDisable() {
+  void onDisable() override
+  {
     unsubscribe();
     reset();
   }
@@ -118,14 +139,15 @@ protected:
   /** @brief Incoming message callback.  Checks if the message pointer
    * is valid, increments messages_received_, then calls
    * processMessage(). */
-  void incomingMessage(const typename MessageType::ConstPtr &msg) {
-    if (!msg) {
+  void incomingMessage(const typename MessageType::ConstPtr& msg)
+  {
+    if (!msg)
+    {
       return;
     }
 
     ++messages_received_;
-    setStatus(rviz::StatusProperty::Ok, "Topic",
-              QString::number(messages_received_) + " messages received");
+    setStatus(rviz::StatusProperty::Ok, "Topic", QString::number(messages_received_) + " messages received");
 
     processMessage(msg);
   }
@@ -133,11 +155,11 @@ protected:
   /** @brief Implement this to process the contents of a message.
    *
    * This is called by incomingMessage(). */
-  virtual void processMessage(const typename MessageType::ConstPtr &msg) = 0;
+  virtual void processMessage(const typename MessageType::ConstPtr& msg) = 0;
 
   message_filters::Subscriber<MessageType> sub_;
-  uint32_t messages_received_;
+  uint32_t messages_received_{ 0 };
 };
 
-} // namespace viz
-} // namespace mappr
+}  // namespace viz
+}  // namespace mappr
