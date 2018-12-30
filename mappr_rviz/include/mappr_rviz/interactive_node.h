@@ -40,6 +40,9 @@ namespace mappr
 {
 namespace viz
 {
+/*
+  drageable thing for vps and location edges
+*/
 class InteractiveNode : public QObject
 {
   Q_OBJECT

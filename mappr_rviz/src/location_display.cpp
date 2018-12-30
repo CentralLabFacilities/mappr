@@ -48,7 +48,7 @@ void LocationDisplay::processMessage(const mappr_msgs::Location::ConstPtr& msg)
 
 void LocationDisplay::slotShowLabel()
 {
-  ROS_DEBUG_STREAM("show label: " << (showLabel_->getBool()) ? "true" : "false");
+  ROS_DEBUG_STREAM("show label: " << ((showLabel_->getBool()) ? "true" : "false"));
 }
 
 }  // namespace viz

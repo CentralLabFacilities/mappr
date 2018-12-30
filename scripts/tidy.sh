@@ -7,4 +7,4 @@ PROJECT=mappr_rviz
 WORKSPACE=$DIR/../../../build/$PROJECT
 FULL="$(cd "$(dirname "$WORKSPACE")"; pwd)/$(basename "$WORKSPACE")"
 
-$DIR/run-clang-tidy.py -p=$FULL
+$DIR/run-clang-tidy.py -p=$FULL -fix

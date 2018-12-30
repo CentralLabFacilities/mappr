@@ -42,7 +42,7 @@ void LocationArrayDisplay::processMessage(const mappr_msgs::LocationArray::Const
 
 void LocationArrayDisplay::slotShowLabels()
 {
-  ROS_DEBUG_STREAM("show labels: " << (showLabels_->getBool()) ? "true" : "false");
+  ROS_DEBUG_STREAM("show labels: " << ((showLabels_->getBool()) ? "true" : "false"));
 }
 
 }  // namespace viz

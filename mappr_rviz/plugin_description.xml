@@ -16,5 +16,14 @@
     </description>
     <message_type>mappr_msgs/LocationArray</message_type>
   </class>
+
+  <class name="mappr_rviz/ViewpointArray"
+         type="mappr::viz::ViewpointArrayDisplay"
+         base_class_type="rviz::Display">
+    <description>
+      Displays data from mappr_msgs/ViewpointArray messages.
+    </description>
+    <message_type>mappr_msgs/ViewpointArray</message_type>
+  </class>
   
 </library>

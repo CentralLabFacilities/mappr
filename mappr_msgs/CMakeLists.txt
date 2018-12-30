@@ -16,6 +16,8 @@ add_message_files(
 	FILES
 		Location.msg
 		LocationArray.msg
+		Viewpoint.msg
+		ViewpointArray.msg
 )
 
 add_service_files(
