@@ -88,7 +88,7 @@ def handle_add_fake_room(req):
 def mappr_service_server():
     rospy.init_node('mappr_service_server')
 
-    vp_fake_add = rospy.Service('add_viewpoint', mappr_msgs.srv.UpdateViewpoint, handle_add_fake_room)
+    vp_fake_add = rospy.Service('/mappr_server/add_viewpoint', mappr_msgs.srv.UpdateViewpoint, handle_add_fake_room)
 
     #location_add = rospy.Service('add_location', mappr_msgs.srv.UpdateLocation, handle_add_location)
     logging.getLogger(__name__).info("Server is ready")
