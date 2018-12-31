@@ -23,6 +23,7 @@ add_message_files(
 add_service_files(
 	FILES
 		UpdateLocation.srv
+		UpdateViewpoint.srv
 )
 
 generate_messages(
