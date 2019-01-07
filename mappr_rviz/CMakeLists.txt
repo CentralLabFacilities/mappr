@@ -38,6 +38,7 @@ set(src_files
   src/location_visual.cpp
   src/interactive_node.cpp
   src/viewpoint.cpp
+  src/viewpoint_add_tool.cpp
   )
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -49,6 +50,7 @@ qt_wrap_cpp(${PROJECT_NAME}
   include/mappr_rviz/viewpoint_array_display.h
   include/mappr_rviz/interactive_node.h
   include/mappr_rviz/viewpoint.h
+  include/mappr_rviz/viewpoint_add_tool.h
   )
 
 add_library(${PROJECT_NAME} ${src_files} ${moc_files})

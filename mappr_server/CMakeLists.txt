@@ -14,13 +14,3 @@ catkin_package(
 )
 
 include_directories(${catkin_INCLUDE_DIRS})
-
-
-#############
-## Testing ##
-#############
-
-## Add folders to be run by python nosetests
-if(CATKIN_ENABLE_TESTING)
-    catkin_add_nosetests(test)
-endif()

@@ -25,5 +25,11 @@
     </description>
     <message_type>mappr_msgs/ViewpointArray</message_type>
   </class>
+
+   <class name="mappr_rviz/Add_Viewpoint" type="mappr::viz::ViewpointAddTool" base_class_type="rviz::Tool">
+    <description>
+      Create new Viewpoint.
+    </description>
+  </class>
   
 </library>
