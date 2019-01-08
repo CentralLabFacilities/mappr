@@ -1,3 +1,4 @@
 mappr_msgs/Obstacle obstacle
 ---
 bool success
+int8 error_code
