@@ -10,7 +10,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <exec_depend>mappr_server</exec_depend>
+  <exec_depend>mappr_server_kbase</exec_depend>
   <exec_depend>mappr_msgs</exec_depend>
   <exec_depend>mappr_rviz</exec_depend>
 

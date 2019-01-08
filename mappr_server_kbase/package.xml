@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mappr_server</name>
+  <name>mappr_server_kbase</name>
   <version>0.0.1</version>
-  <description>mappr_server builds on top of kbase to save world information into a mongo db.</description>
+  <description>mappr_server_kbase builds on top of kbase to save world information into a mongo db.</description>
   <maintainer email="dleins@techfak.uni-bielefeld.de">David Leins</maintainer>
   <license>Apache 2.0</license>
   <author>David Leins</author>
@@ -11,5 +11,7 @@
 
   <depend>rospy</depend>
   <depend>mappr_msgs</depend>
+  <build_depend>knowledge_base</build_depend>
+  <exec_depend>knowledge_base</exec_depend>
   
 </package>
