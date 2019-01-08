@@ -32,12 +32,14 @@ include_directories(include)
 ## Build ##
 ###########
 set(src_files
-  src/location_display.cpp
-  src/location_array_display.cpp
-  src/viewpoint_array_display.cpp
-  src/location_visual.cpp
   src/interactive_node.cpp
-  src/viewpoint.cpp
+
+  src/location_array_display.cpp
+  src/location_visual.cpp
+
+  src/viewpoint_array_display.cpp
+  src/viewpoint_visual.cpp
+
   src/viewpoint_add_tool.cpp
   )
 
@@ -45,11 +47,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 qt_wrap_cpp(${PROJECT_NAME} 
   moc_files 
   include/mappr_rviz/topic_display.h 
-  include/mappr_rviz/location_display.h 
+  include/mappr_rviz/interactive_node.h
+  
   include/mappr_rviz/location_array_display.h
   include/mappr_rviz/viewpoint_array_display.h
-  include/mappr_rviz/interactive_node.h
-  include/mappr_rviz/viewpoint.h
+  
   include/mappr_rviz/viewpoint_add_tool.h
   )
 
@@ -82,3 +84,8 @@ install(FILES
 
 install(DIRECTORY icons/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/icons)
+
+#install(DIRECTORY media/
+#  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/media)
+
+

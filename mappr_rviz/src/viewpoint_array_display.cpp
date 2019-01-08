@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <rviz/properties/bool_property.h>
+#include <rviz/properties/float_property.h>
 
 namespace mappr
 {
@@ -12,10 +13,11 @@ namespace viz
 ViewpointArrayDisplay::ViewpointArrayDisplay()
 {
   showLabels_ = new rviz::BoolProperty("show Labels", true, "Draw the Labels.", this, SLOT(slotShowLabels()));
+  labelSize_ = new rviz::FloatProperty("Label size", 0.5, "Character Height of TextLabel", this, SLOT(slotLabelSize()));
 
   /* TODO
-  - show visual circle + dir + label
-  - viewpoint creation tool
+  - remove deleted vps and locations
+  - combine to arena display
 
   - display interaction node
     - on drag emit signals
@@ -29,20 +31,12 @@ ViewpointArrayDisplay::ViewpointArrayDisplay()
 
 void ViewpointArrayDisplay::onInitialize()
 {
-  initialized = false;
-  firstMessage(nullptr);
+  TDClass::onInitialize();
 }
 
 void ViewpointArrayDisplay::reset()
 {
-  initialized = false;
-}
-
-void ViewpointArrayDisplay::firstMessage(const mappr_msgs::ViewpointArray::ConstPtr& /*msg*/)
-{
-  initialized = true;
-
-  // test me here
+  TDClass::reset();
 }
 
 void ViewpointArrayDisplay::processMessage(const mappr_msgs::ViewpointArray::ConstPtr& msg)
@@ -53,23 +47,31 @@ void ViewpointArrayDisplay::processMessage(const mappr_msgs::ViewpointArray::Con
     if (vp != viewpoints_.end())
     {
       vp->second->setMessage(vpmsg);
+      vp->second->setShowLabel(showLabels_->getBool());
+      vp->second->setCharacterHeight(labelSize_->getFloat());
     }
     else
     {
-      viewpoints_[vpmsg.label] = std::make_unique<Viewpoint>(context_->getSceneManager(), scene_node_);
+      viewpoints_[vpmsg.label] = std::make_unique<ViewpointVisual>(context_->getSceneManager(), scene_node_);
       viewpoints_[vpmsg.label]->setMessage(vpmsg);
     }
   }
+}
 
-  if (!initialized)
+void ViewpointArrayDisplay::slotLabelSize()
+{
+  for (const auto& kv : viewpoints_)
   {
-    firstMessage(msg);
+    kv.second->setCharacterHeight(labelSize_->getFloat());
   }
 }
 
 void ViewpointArrayDisplay::slotShowLabels()
 {
-  ROS_DEBUG_STREAM("show labels: " << ((showLabels_->getBool()) ? "true" : "false"));
+  for (const auto& kv : viewpoints_)
+  {
+    kv.second->setShowLabel(showLabels_->getBool());
+  }
 }
 
 }  // namespace viz

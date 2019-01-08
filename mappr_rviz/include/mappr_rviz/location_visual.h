@@ -29,7 +29,10 @@ public:
   ~LocationVisual();
 
   // Configure the visual to show the data in the message.
-  void setMessage(const mappr_msgs::Location::ConstPtr& msg);
+  void setMessage(const mappr_msgs::Location& msg);
+  void setShowLabel(const bool show);
+  void setCharacterHeight(const float size);
+  void setColor(const QColor color);
 
 private:
   Ogre::SceneNode* location_node_{ nullptr };
@@ -39,8 +42,8 @@ private:
   Ogre::ManualObject* manual_object_{ nullptr };
   rviz::MovableText* text_{ nullptr };
 
-  bool showLabel_;
-  QColor color_;
+  float text_size_{ 1 };
+  QColor color_{ QColor(0, 0, 0) };
 };
 }  // namespace viz
 }  // namespace mappr

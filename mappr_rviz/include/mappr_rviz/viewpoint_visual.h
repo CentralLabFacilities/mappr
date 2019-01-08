@@ -6,6 +6,7 @@
 
 namespace Ogre
 {
+class Entity;
 class Vector3;
 class Quaternion;
 class ManualObject;
@@ -22,21 +23,27 @@ namespace mappr
 {
 namespace viz
 {
-class Viewpoint
+class ViewpointVisual
 {
 public:
-  Viewpoint(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node);
-  ~Viewpoint();
+  ViewpointVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node);
+  ~ViewpointVisual();
 
   // Configure the visual to show the data in the message.
   void setMessage(const mappr_msgs::Viewpoint msg);
+  void setShowLabel(const bool show);
+  void setCharacterHeight(const float size);
 
 private:
   Ogre::SceneNode* text_node_{ nullptr };
+  Ogre::SceneNode* object_node_{ nullptr };
+  Ogre::SceneNode* pose_node_{ nullptr };
+
   Ogre::SceneManager* scene_manager_{ nullptr };
   rviz::MovableText* text_{ nullptr };
 
-  bool showLabel_;
+  float text_size_{ 1 };
+  std::string viewpointRes_{ "package://mappr_rviz/media/viewpoint.dae" };
 };
 }  // namespace viz
 }  // namespace mappr

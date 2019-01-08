@@ -29,7 +29,9 @@ LocationVisual::LocationVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNod
   manual_object_->setDynamic(true);
   location_node_->attachObject(manual_object_);
 
-  color_ = QColor(25, 255, 0);
+  text_ = new rviz::MovableText("Location");
+  text_->setTextAlignment(rviz::MovableText::H_CENTER, rviz::MovableText::V_CENTER);
+  text_node_->attachObject(text_);
 }
 
 LocationVisual::~LocationVisual()
@@ -38,9 +40,38 @@ LocationVisual::~LocationVisual()
   scene_manager_->destroySceneNode(text_node_);
 }
 
-// ----------------------------------------------------------------------------
-void LocationVisual::setMessage(const mappr_msgs::Location::ConstPtr& msg)
+void LocationVisual::setShowLabel(const bool show)
 {
+  text_node_->setVisible(show);
+}
+
+void LocationVisual::setCharacterHeight(const float size)
+{
+  text_size_ = size;
+  if (text_ != nullptr)
+  {
+    text_->setCharacterHeight(text_size_);
+  }
+}
+
+void LocationVisual::setColor(const QColor color)
+{
+  color_ = color;
+}
+
+// ----------------------------------------------------------------------------
+void LocationVisual::setMessage(const mappr_msgs::Location& msg)
+{
+  auto center = compute2DPolygonCentroid(msg.polygon);
+  Ogre::Vector3 pos = Ogre::Vector3(center.x, center.y, 0);
+  Ogre::Vector3 scale = Ogre::Vector3(1, 1, 1);
+  Ogre::Quaternion orient = Ogre::Quaternion(1, 0, 0, 0);
+  text_node_->setPosition(pos);
+
+  text_->setCharacterHeight(text_size_);
+  text_->setColor(rviz::qtToOgre(color_));
+  text_->setCaption(msg.label);
+
   // Ogre::Vector3 position;
   // Ogre::Quaternion orientation;
   // if( !context_->getFrameManager()->getTransform( msg->header, position,
@@ -60,37 +91,20 @@ void LocationVisual::setMessage(const mappr_msgs::Location::ConstPtr& msg)
   Ogre::ColourValue color = rviz::qtToOgre(color_);
   color.a = 1;
 
-  uint32_t num_points = msg->polygon.size();
+  uint32_t num_points = msg.polygon.size();
   if (num_points > 0)
   {
     manual_object_->estimateVertexCount(num_points);
     manual_object_->begin("BaseWhiteNoLighting", Ogre::RenderOperation::OT_LINE_STRIP);
     for (uint32_t i = 0; i < num_points + 1; ++i)
     {
-      const geometry_msgs::Point& msg_point = msg->polygon[i % num_points];
+      const geometry_msgs::Point& msg_point = msg.polygon[i % num_points];
       manual_object_->position(msg_point.x, msg_point.y, 0);
       manual_object_->colour(color);
     }
 
     manual_object_->end();
   }
-
-  if (text_ == nullptr)
-  {
-    text_ = new rviz::MovableText(msg->label);
-    text_->setTextAlignment(rviz::MovableText::H_CENTER, rviz::MovableText::V_CENTER);
-    text_node_->attachObject(text_);
-  }
-
-  auto center = compute2DPolygonCentroid(msg->polygon);
-  Ogre::Vector3 pos = Ogre::Vector3(center.x, center.y, 0);
-  Ogre::Vector3 scale = Ogre::Vector3(1, 1, 1);
-  Ogre::Quaternion orient = Ogre::Quaternion(1, 0, 0, 0);
-  text_node_->setPosition(pos);
-
-  text_->setCharacterHeight(1);
-  text_->setColor(rviz::qtToOgre(color_));
-  text_->setCaption(msg->label);
 }
 
 }  // namespace viz

@@ -3,6 +3,7 @@
 #ifndef Q_MOC_RUN
 #include "mappr_msgs/LocationArray.h"
 #include "mappr_rviz/location_visual.h"
+#include "mappr_rviz/topic_display.h"
 #include "rviz/message_filter_display.h"
 #endif
 
@@ -14,13 +15,14 @@ class SceneNode;
 namespace rviz
 {
 class BoolProperty;
+class FloatProperty;
 }
 
 namespace mappr
 {
 namespace viz
 {
-class LocationArrayDisplay : public rviz::Display
+class LocationArrayDisplay : public TopicDisplay<mappr_msgs::LocationArray>
 {
   Q_OBJECT
 public:
@@ -33,17 +35,17 @@ protected:
 
 private Q_SLOTS:
   void slotShowLabels();
+  void slotLabelSize();
 
 private:
-  void processMessage(const mappr_msgs::LocationArray::ConstPtr& msg);
-
-  bool initialized;
-  void firstMessage(const mappr_msgs::LocationArray::ConstPtr& msg);
+  void processMessage(const mappr_msgs::LocationArray::ConstPtr& msg) override;
 
   mappr_msgs::LocationArray::ConstPtr initMsg_;
   rviz::BoolProperty* showLabels_;
+  rviz::FloatProperty* labelSize_;
 
-  std::unique_ptr<LocationVisual> locationVis_;
+  std::map<std::string, std::unique_ptr<LocationVisual> > locations_;
+  int curColor_{ 0 };
 };
 }  // namespace viz
 }  // namespace mappr

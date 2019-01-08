@@ -1,0 +1,37 @@
+viewpoints:                                                            
+- header:
+    seq: 0
+    stamp:                  
+      secs: 0               
+      nsecs: 0   
+    frame_id: ''
+  label: 'blub'   
+  parent_location:
+    label: ''
+    polygon:
+    - x: 0.0
+      y: 0.0
+      z: 0.0      
+    is_room: false
+  pose:   
+    x: 0.0
+    y: 0.0    
+    theta: 1.0 
+- header: 
+    seq: 0
+    stamp:   
+      secs: 0 
+      nsecs: 0  
+    frame_id: '' 
+  label: 'blub_2' 
+  parent_location:
+    label: ''
+    polygon:
+    - x: 0.0
+      y: 0.0
+      z: 0.0      
+    is_room: false
+  pose:   
+    x: 2.0                                                                                                        
+    y: 3.0                                                                                                        
+    theta: 0.0

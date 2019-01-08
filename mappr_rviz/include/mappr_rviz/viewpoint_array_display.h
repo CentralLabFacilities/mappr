@@ -3,7 +3,7 @@
 #ifndef Q_MOC_RUN
 #include <mappr_msgs/ViewpointArray.h>
 
-#include "mappr_rviz/viewpoint.h"
+#include "mappr_rviz/viewpoint_visual.h"
 #include "mappr_rviz/topic_display.h"
 #endif
 
@@ -15,6 +15,7 @@ class SceneNode;
 namespace rviz
 {
 class BoolProperty;
+class FloatProperty;
 }
 
 namespace mappr
@@ -34,17 +35,16 @@ protected:
 
 private Q_SLOTS:
   void slotShowLabels();
+  void slotLabelSize();
 
 private:
   void processMessage(const mappr_msgs::ViewpointArray::ConstPtr& msg) override;
 
-  bool initialized;
-  void firstMessage(const mappr_msgs::ViewpointArray::ConstPtr& msg);
-
   mappr_msgs::ViewpointArray::ConstPtr initMsg_;
   rviz::BoolProperty* showLabels_;
+  rviz::FloatProperty* labelSize_;
 
-  std::map<std::string, std::unique_ptr<Viewpoint> > viewpoints_;
+  std::map<std::string, std::unique_ptr<ViewpointVisual> > viewpoints_;
 };
 }  // namespace viz
 }  // namespace mappr
