@@ -1,4 +1,4 @@
 Header header
 string label
-Location parent_location
+string parent_location_name
 geometry_msgs/Pose2D pose
