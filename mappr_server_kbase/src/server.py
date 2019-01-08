@@ -20,7 +20,7 @@ BDO_ALREADY_EXISTS = 100
 COULD_NOT_READ_FROM_DB = 101
 COULD_NOT_WRITE_TO_DB = 102
 
-viewpoint_array_pub = rospy.Publisher('current_viewpoints', mappr_msgs.msg.ViewpointArray, queue_size=1)
+viewpoint_array_pub = rospy.Publisher('/mappr_server/current_viewpoints', mappr_msgs.msg.ViewpointArray, queue_size=1)
 
 
 def handle_add_location(req):
@@ -172,7 +172,7 @@ def mappr_service_server():
         sys.exit(error_code)
 
     vp_fake_add = rospy.Service(
-        '/mappr_server_kbase/add_viewpoint',
+        '/mappr_server/add_viewpoint',
         mappr_msgs.srv.UpdateViewpoint,
         handle_add_viewpoint_to_fake_room
     )
