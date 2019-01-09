@@ -2,6 +2,8 @@
 import rospy
 import rosservice
 
+import time
+
 from knowledge_base_msgs.srv import *
 import xml.etree.ElementTree as ET
 
@@ -45,8 +47,129 @@ def handle_add_location(req):
     return UpdateLocationResponse(False)
 
 
+def handle_remove_viewpoint_from_fake_room(req):
+    vp_msg = req.viewpoint
+
+    rospy.wait_for_service('/KBase/query')
+    try:
+        query = rospy.ServiceProxy('/KBase/query', Query)
+        res = query('which room name arena')
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: %s" % e)
+        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_READ_FROM_DB)
+
+    found = False
+    tree = ET.fromstring(res.answer.encode('utf-8'))
+    for child in tree:
+        if child.tag == 'ROOM':
+            rospy.logdebug("arena room found")
+            found = True
+            break
+
+    if not found:
+        rospy.logerr("arena room could not be retrieved from database! Aborting save")
+        return UpdateViewpointResponse(success=False, error_code=UBIQ_ROOM_NOT_FOUND)
+
+    room = Room.from_xml(child)
+
+    found = False
+
+    for vp in room.annotation.viewpoints:
+        if vp.label == vp_msg.label:
+            rospy.logdebug("found viewpoint %s in ubiq room" % vp.label)
+            found = True
+            break
+
+    if not found:
+        rospy.logerr("Could not remove viewpoint since it does not exists!")
+        return UpdateViewpointResponse(success=False, error_code=BDO_DOES_NOT_EXIST)
+
+    room.annotation.viewpoints.remove(vp)
+
+    rospy.wait_for_service('/KBase/data')
+    try:
+        saving = rospy.ServiceProxy('/KBase/data', Data)
+        res = saving('remember %s' % ET.tostring(room.to_xml()))
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: %s" % e)
+        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_WRITE_TO_DB)
+
+    if not res.success:
+        rospy.logerr("Service call failed!")
+        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_WRITE_TO_DB)
+
+    publish_current_viewpoints(room)
+
+    return UpdateViewpointResponse(success=True)
+
+
+def handle_update_viewpoint_in_fake_room(req):
+    vp_msg = req.viewpoint
+
+    vp_position = Positiondata(
+        frameid=vp_msg.header.frame_id,
+        point2d=Point2d(vp_msg.pose.x, vp_msg.pose.y),
+        theta=vp_msg.pose.theta
+    )
+
+    updated_vp = Viewpoint(label=vp_msg.label, positiondata=vp_position)
+
+    rospy.wait_for_service('/KBase/query')
+    try:
+        query = rospy.ServiceProxy('/KBase/query', Query)
+        res = query('which room name arena')
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: %s" % e)
+        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_READ_FROM_DB)
+
+    found = False
+    tree = ET.fromstring(res.answer.encode('utf-8'))
+    for child in tree:
+        if child.tag == 'ROOM':
+            rospy.logdebug("arena room found")
+            found = True
+            break
+
+    if not found:
+        rospy.logerr("arena room could not be retrieved from database! Aborting save")
+        return UpdateViewpointResponse(success=False, error_code=UBIQ_ROOM_NOT_FOUND)
+
+    room = Room.from_xml(child)
+
+    found = False
+
+    for vp in room.annotation.viewpoints:
+        if vp.label == vp_msg.label:
+            rospy.logdebug("found viewpoint %s in ubiq room" % vp.label)
+            found = True
+            break
+
+    if not found:
+        rospy.logerr("Could not remove viewpoint since it does not exists!")
+        return UpdateViewpointResponse(success=False, error_code=BDO_DOES_NOT_EXIST)
+
+    room.annotation.viewpoints.remove(vp)
+    room.annotation.viewpoints.append(updated_vp)
+
+    rospy.wait_for_service('/KBase/data')
+    try:
+        saving = rospy.ServiceProxy('/KBase/data', Data)
+        res = saving('remember %s' % ET.tostring(room.to_xml()))
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: %s" % e)
+        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_WRITE_TO_DB)
+
+    if not res.success:
+        rospy.logerr("Service call failed!")
+        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_WRITE_TO_DB)
+
+    publish_current_viewpoints(room)
+
+    return UpdateViewpointResponse(success=True)
+
+
 def handle_add_viewpoint_to_fake_room(req):
-    """Adds new viewpoint to ubiquitous room.
+    """Adds new viewpoint to arena room.
 
     Returns a failed state if a viewpoint with this name already exists.
 
@@ -55,7 +178,7 @@ def handle_add_viewpoint_to_fake_room(req):
     :rtype: bool
     :return: Whether saving was successful or not
     """
-    vp_msg = req.viewpoint #type: mappr_msgs.msg.Viewpoint
+    vp_msg = req.viewpoint
 
     vp_position = Positiondata(
         frameid=vp_msg.header.frame_id,
@@ -68,7 +191,7 @@ def handle_add_viewpoint_to_fake_room(req):
     rospy.wait_for_service('/KBase/query')
     try:
         query = rospy.ServiceProxy('/KBase/query', Query)
-        res = query('which room name ubiquitous')
+        res = query('which room name arena')
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
         return UpdateViewpointResponse(success=False, error_code=COULD_NOT_READ_FROM_DB)
@@ -77,12 +200,12 @@ def handle_add_viewpoint_to_fake_room(req):
     tree = ET.fromstring(res.answer.encode('utf-8'))
     for child in tree:
         if child.tag == 'ROOM':
-            rospy.logdebug("Ubiquitous room found")
+            rospy.logdebug("arena room found")
             found = True
             break
 
     if not found:
-        rospy.logerr("Ubiquitous room could not be retrieved from database! Aborting save")
+        rospy.logerr("arena room could not be retrieved from database! Aborting save")
         return UpdateViewpointResponse(success=False, error_code=UBIQ_ROOM_NOT_FOUND)
 
     room = Room.from_xml(child)
@@ -122,7 +245,7 @@ def create_ubiquitous_fake_room():
     rospy.wait_for_service('/KBase/query')
     try:
         query = rospy.ServiceProxy('/KBase/query', Query)
-        res = query('which room name ubiquitous')
+        res = query('which room name arena')
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
         return False, COULD_NOT_READ_FROM_DB
@@ -130,7 +253,7 @@ def create_ubiquitous_fake_room():
     tree = ET.fromstring(res.answer.encode('utf-8'))
     for child in tree:
         if child.tag == 'ROOM':
-            rospy.loginfo("Ubiquitous room already in DB")
+            rospy.loginfo("arena room already in DB")
             return True, 0
 
     # Create fake 1x1 meters room
@@ -144,8 +267,8 @@ def create_ubiquitous_fake_room():
     )
 
     vp_obj = Viewpoint(label='main', positiondata=vp_position)
-    room_annotation = Annotation(label='room:ubiquitous', polygon=[poly], viewpoints=[vp_obj])
-    fake_room = Room(name='ubiquitous', annotation=room_annotation, numberofdoors=0)
+    room_annotation = Annotation(label='room:arena', polygon=[poly], viewpoints=[vp_obj])
+    fake_room = Room(name='arena', annotation=room_annotation, numberofdoors=0)
 
     rospy.wait_for_service('/KBase/data')
     try:
@@ -165,16 +288,28 @@ def create_ubiquitous_fake_room():
 def mappr_service_server():
     rospy.init_node('mappr_service_server')
 
-    rospy.loginfo("Trying to save ubiquitous fake room")
+    rospy.loginfo("Trying to save arena fake room")
     success, error_code = create_ubiquitous_fake_room()
     if not success:
-        rospy.logfatal("Saving ubiquitous fake room failed - Shutting down")
+        rospy.logfatal("Saving arena fake room failed - Shutting down")
         sys.exit(error_code)
 
     vp_fake_add = rospy.Service(
         '/mappr_server/add_viewpoint',
         mappr_msgs.srv.UpdateViewpoint,
         handle_add_viewpoint_to_fake_room
+    )
+
+    vp_fake_update = rospy.Service(
+        '/mappr_server/update_viewpoint',
+        mappr_msgs.srv.UpdateViewpoint,
+        handle_update_viewpoint_in_fake_room
+    )
+
+    vp_fake_remove = rospy.Service(
+        '/mappr_server/remove_viewpoint',
+        mappr_msgs.srv.UpdateViewpoint,
+        handle_remove_viewpoint_from_fake_room
     )
 
     # location_add = rospy.Service('add_location', mappr_msgs.srv.UpdateLocation, handle_add_location)
@@ -207,7 +342,18 @@ def publish_current_viewpoints(room):
 
 
 if __name__ == "__main__":
-    if not '/KBase/query' in rosservice.get_service_list():
+
+    tries = 0
+    kbase_found = False
+
+    while tries < 3:
+        if '/KBase/query' in rosservice.get_service_list():
+            kbase_found = True
+            break
+        tries += 1
+        time.sleep(1)
+
+    if not kbase_found:
         rospy.logfatal("KBase is not running! Start KBase before running mappr")
         sys.exit(KBASE_NOT_RUNNING)
     else:
