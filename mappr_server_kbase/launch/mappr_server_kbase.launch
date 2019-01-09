@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <arg name="rviz_config" default="annotation_minimal_conf.rviz"/>
+    <arg name="kbase_config" default="kbase_empty_db_config.yaml"/>
+
+     <!-- start kbase -->
+    <include file="$(find knowledge_base)/launch/kbase.launch">
+        <arg name="path_to_config" value="$(find knowledge_base)/useful_files/$(arg kbase_config)"/>
+    </include>
+
+    <!-- Start mappr_server_kbase -->
+    <node name="mappr_server_kbase" pkg="mappr_server_kbase" type="server.py" output="screen" />
+
+    <!-- Start rviz -->
+    <node type="rviz" name="rviz" pkg="rviz" args="--display-config $(find mappr_data)/rviz_config/$(arg rviz_config)" />
+
+
+</launch>
