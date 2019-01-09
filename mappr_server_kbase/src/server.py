@@ -22,7 +22,12 @@ BDO_ALREADY_EXISTS = 100
 COULD_NOT_READ_FROM_DB = 101
 COULD_NOT_WRITE_TO_DB = 102
 
-viewpoint_array_pub = rospy.Publisher('/mappr_server/current_viewpoints', mappr_msgs.msg.ViewpointArray, queue_size=1)
+viewpoint_array_pub = rospy.Publisher(
+    '/mappr_server/current_viewpoints',
+    mappr_msgs.msg.ViewpointArray,
+    queue_size=1,
+    latch=True
+)
 
 
 def handle_add_location(req):
@@ -281,6 +286,8 @@ def create_ubiquitous_fake_room():
     if not res.success:
         rospy.logerr("Service call failed!")
         return False, COULD_NOT_WRITE_TO_DB
+
+    publish_current_viewpoints(fake_room)
 
     return True, 0
 
