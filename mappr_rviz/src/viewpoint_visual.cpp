@@ -23,9 +23,11 @@ namespace mappr
 {
 namespace viz
 {
-ViewpointVisual::ViewpointVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node)
+ViewpointVisual::ViewpointVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node, mappr_msgs::Viewpoint msg, bool show, float char_heigth)
 {
   scene_manager_ = scene_manager;
+
+  text_size_ = char_heigth;
 
   // Todo TF/HEADER cntxt
   pose_node_ = parent_node->createChildSceneNode();
@@ -41,9 +43,14 @@ ViewpointVisual::ViewpointVisual(Ogre::SceneManager* scene_manager, Ogre::SceneN
   Ogre::Entity* entity = scene_manager_->createEntity(viewpointRes_);
   object_node_->attachObject(entity);
 
-  text_ = new rviz::MovableText("viewpoint");
+  text_ = new rviz::MovableText(msg.label);
   text_->setTextAlignment(rviz::MovableText::H_CENTER, rviz::MovableText::V_CENTER);
+  
+  text_node_->setVisible(show);
   text_node_->attachObject(text_);
+  setMessage(msg);
+
+  object_node_->setVisible(true);
 }
 
 ViewpointVisual::~ViewpointVisual()

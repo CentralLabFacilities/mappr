@@ -42,6 +42,11 @@ void ViewpointArrayDisplay::reset()
 void ViewpointArrayDisplay::processMessage(const mappr_msgs::ViewpointArray::ConstPtr& msg)
 {
   std::lock_guard<std::mutex> lock(mutex_);
+  for (const auto& kv : viewpoints_)
+  {
+    ROS_DEBUG_STREAM(kv.first);
+  }
+
 
   for (mappr_msgs::Viewpoint vpmsg : msg->viewpoints)
   {
@@ -49,13 +54,12 @@ void ViewpointArrayDisplay::processMessage(const mappr_msgs::ViewpointArray::Con
     if (vp != viewpoints_.end())
     {
       vp->second->setCharacterHeight(labelSize_->getFloat());
-      vp->second->setMessage(vpmsg);
       vp->second->setShowLabel(showLabels_->getBool());
+      vp->second->setMessage(vpmsg);
     }
     else
     {
-      viewpoints_[vpmsg.label] = std::make_unique<ViewpointVisual>(context_->getSceneManager(), scene_node_);
-      viewpoints_[vpmsg.label]->setMessage(vpmsg);
+      viewpoints_[vpmsg.label] = std::make_unique<ViewpointVisual>(context_->getSceneManager(), scene_node_, vpmsg, showLabels_->getBool(), labelSize_->getFloat());
     }
   }
 }
