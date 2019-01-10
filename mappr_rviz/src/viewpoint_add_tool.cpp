@@ -35,6 +35,8 @@ void ViewpointAddTool::onInitialize()
 void ViewpointAddTool::updateName()
 {
   // NOP
+  // Only lowercase names
+  name_property_->setString(name_property_->getString().toLower());
 }
 
 void ViewpointAddTool::onPoseSet(double x, double y, double theta)
