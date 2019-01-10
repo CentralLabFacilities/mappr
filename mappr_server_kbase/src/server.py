@@ -281,12 +281,15 @@ def mappr_service_server():
     while not rospy.is_shutdown():
         child, error_code = get_fake_ubiquitous_room()
 
-        if not child:
+        if child is None:
             rospy.logerr("arena room could not be retrieved from database! Can not publish viewpoints")
 
         room = Room.from_xml(child)
         publish_current_viewpoints(room)
-        rate.sleep()
+        try:
+            rate.sleep()
+        except rospy.exceptions.ROSInterruptException:
+            break
 
 
 def get_fake_ubiquitous_room():
