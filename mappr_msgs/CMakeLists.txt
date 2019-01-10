@@ -18,6 +18,7 @@ add_message_files(
 		LocationArray.msg
 		Viewpoint.msg
 		ViewpointArray.msg
+		MapprError.msg
 )
 
 add_service_files(

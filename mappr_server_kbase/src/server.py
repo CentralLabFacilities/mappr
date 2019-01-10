@@ -12,16 +12,6 @@ import geometry_msgs.msg
 from mappr_msgs.srv import *
 from KnowledgeBase.Classes import *
 
-
-UBIQ_ROOM = None
-
-UBIQ_ROOM_NOT_FOUND = 97
-KBASE_NOT_RUNNING = 98
-BDO_DOES_NOT_EXIST = 99
-BDO_ALREADY_EXISTS = 100
-COULD_NOT_READ_FROM_DB = 101
-COULD_NOT_WRITE_TO_DB = 102
-
 viewpoint_array_pub = rospy.Publisher(
     '/mappr_server/current_viewpoints',
     mappr_msgs.msg.ViewpointArray,
@@ -59,7 +49,8 @@ def handle_remove_viewpoint_from_fake_room(req):
 
     if not child:
         rospy.logerr("arena room could not be retrieved from database! Aborting save")
-        return UpdateViewpointResponse(success=False, error_code=error_code)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.UBIQ_ROOM_NOT_FOUND)
+        return UpdateViewpointResponse(success=False, error=error)
 
     room = Room.from_xml(child)
 
@@ -73,7 +64,8 @@ def handle_remove_viewpoint_from_fake_room(req):
 
     if not found:
         rospy.logerr("Could not remove viewpoint since it does not exists!")
-        return UpdateViewpointResponse(success=False, error_code=BDO_DOES_NOT_EXIST)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.BDO_DOES_NOT_EXIST)
+        return UpdateViewpointResponse(success=False, error=error)
 
     room.annotation.viewpoints.remove(vp)
 
@@ -83,11 +75,13 @@ def handle_remove_viewpoint_from_fake_room(req):
         res = saving('remember %s' % ET.tostring(room.to_xml()))
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
-        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_WRITE_TO_DB)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
+        return UpdateViewpointResponse(success=False, error=error)
 
     if not res.success:
         rospy.logerr("Service call failed!")
-        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_WRITE_TO_DB)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
+        return UpdateViewpointResponse(success=False, error=error)
 
     publish_current_viewpoints(room)
 
@@ -105,11 +99,11 @@ def handle_update_viewpoint_in_fake_room(req):
 
     updated_vp = Viewpoint(label=vp_msg.label, positiondata=vp_position)
 
-    child, error_code = get_fake_ubiquitous_room()
+    child, error = get_fake_ubiquitous_room()
 
     if not child:
         rospy.logerr("arena room could not be retrieved from database! Aborting save")
-        return UpdateViewpointResponse(success=False, error_code=error_code)
+        return UpdateViewpointResponse(success=False, error=error)
 
     room = Room.from_xml(child)
 
@@ -123,7 +117,8 @@ def handle_update_viewpoint_in_fake_room(req):
 
     if not found:
         rospy.logerr("Could not remove viewpoint since it does not exists!")
-        return UpdateViewpointResponse(success=False, error_code=BDO_DOES_NOT_EXIST)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.BDO_DOES_NOT_EXIST)
+        return UpdateViewpointResponse(success=False, error=error)
 
     room.annotation.viewpoints.remove(vp)
     room.annotation.viewpoints.append(updated_vp)
@@ -134,11 +129,13 @@ def handle_update_viewpoint_in_fake_room(req):
         res = saving('remember %s' % ET.tostring(room.to_xml()))
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
-        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_WRITE_TO_DB)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
+        return UpdateViewpointResponse(success=False, error=error)
 
     if not res.success:
         rospy.logerr("Service call failed!")
-        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_WRITE_TO_DB)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
+        return UpdateViewpointResponse(success=False, error=error)
 
     publish_current_viewpoints(room)
 
@@ -165,11 +162,11 @@ def handle_add_viewpoint_to_fake_room(req):
 
     vp_obj = Viewpoint(label=vp_msg.label, positiondata=vp_position)
 
-    child, error_code = get_fake_ubiquitous_room()
+    child, error = get_fake_ubiquitous_room()
 
     if not child:
         rospy.logerr("arena room could not be retrieved from database! Aborting save")
-        return UpdateViewpointResponse(success=False, error_code=error_code)
+        return UpdateViewpointResponse(success=False, error=error)
 
     room = Room.from_xml(child)
 
@@ -177,7 +174,8 @@ def handle_add_viewpoint_to_fake_room(req):
         if vp.label == vp_msg.label:
             rospy.logerr("Could not add viewpoint since it already exists! Use the change viewpoint service to update "
                          "it")
-            return UpdateViewpointResponse(success=False, error_code=BDO_ALREADY_EXISTS)
+            error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.BDO_ALREADY_EXISTS)
+            return UpdateViewpointResponse(success=False, error=error)
 
     room.annotation.viewpoints.append(vp_obj)
 
@@ -187,11 +185,13 @@ def handle_add_viewpoint_to_fake_room(req):
         res = saving('remember %s' % ET.tostring(room.to_xml()))
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
-        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_WRITE_TO_DB)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
+        return UpdateViewpointResponse(success=False, error=error)
 
     if not res.success:
         rospy.logerr("Service call failed!")
-        return UpdateViewpointResponse(success=False, error_code=COULD_NOT_WRITE_TO_DB)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
+        return UpdateViewpointResponse(success=False, error=error)
 
     publish_current_viewpoints(room)
 
@@ -206,15 +206,15 @@ def create_ubiquitous_fake_room():
     """
 
     rospy.loginfo("Trying to get arena fake room")
-    child, error_code = get_fake_ubiquitous_room()
+    child, error = get_fake_ubiquitous_room()
 
     if child:
         rospy.loginfo("arena room already in DB")
         return True, 0
 
-    if not child and error_code is not UBIQ_ROOM_NOT_FOUND:
+    if not child and error.code is not mappr_msgs.msg.MapprError.UBIQ_ROOM_NOT_FOUND:
         rospy.logerr("Error while trying to read from DB! Aborting save")
-        return UpdateViewpointResponse(success=False, error_code=error_code)
+        return None, error.code
 
     # Create fake 1x1 meters room
     # Last point has to be first point again
@@ -236,11 +236,11 @@ def create_ubiquitous_fake_room():
         res = saving('remember %s' % ET.tostring(fake_room.to_xml()))
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
-        return False, COULD_NOT_WRITE_TO_DB
+        return False, mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB
 
     if not res.success:
         rospy.logerr("Service call failed!")
-        return False, COULD_NOT_WRITE_TO_DB
+        return False, mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB
 
     publish_current_viewpoints(fake_room)
 
@@ -296,15 +296,19 @@ def get_fake_ubiquitous_room():
         res = query('which room name arena')
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
-        return None, COULD_NOT_READ_FROM_DB
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_READ_FROM_DB)
+        return None, error
 
     tree = ET.fromstring(res.answer.encode('utf-8'))
+
+    error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.NO_ERROR)
 
     for child in tree:
         if child.tag == 'ROOM':
             rospy.logdebug("arena room found in DB")
             return child, 0
-    return None, UBIQ_ROOM_NOT_FOUND
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.UBIQ_ROOM_NOT_FOUND)
+    return None, error
 
 
 def publish_current_viewpoints(room):
@@ -345,6 +349,6 @@ if __name__ == "__main__":
 
     if not kbase_found:
         rospy.logfatal("KBase is not running! Start KBase before running mappr")
-        sys.exit(KBASE_NOT_RUNNING)
+        sys.exit(mappr_msgs.msg.MapprError.KBASE_NOT_RUNNING)
     else:
         mappr_service_server()

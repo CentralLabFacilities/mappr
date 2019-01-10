@@ -1,4 +1,4 @@
 mappr_msgs/Viewpoint viewpoint
 ---
 bool success
-int8 error_code
+mappr_msgs/MapprError error

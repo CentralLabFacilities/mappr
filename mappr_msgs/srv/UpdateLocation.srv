@@ -1,4 +1,4 @@
 mappr_msgs/Location location
 ---
 bool success
-int8 error_code
+mappr_msgs/MapprError error
