@@ -15,9 +15,6 @@ Panels:
     Name: Selection
   - Class: rviz/Tool Properties
     Expanded:
-      - /2D Pose Estimate1
-      - /2D Nav Goal1
-      - /Publish Point1
       - /Add Viewpoint1
     Name: Tool Properties
     Splitter Ratio: 0.588679016
@@ -89,18 +86,9 @@ Visualization Manager:
     - Class: rviz/Interact
       Hide Inactive Objects: true
     - Class: rviz/MoveCamera
-    - Class: rviz/Select
-    - Class: rviz/FocusCamera
     - Class: rviz/Measure
-    - Class: rviz/SetInitialPose
-      Topic: /initialpose
-    - Class: rviz/SetGoal
-      Topic: /move_base_simple/goal
-    - Class: rviz/PublishPoint
-      Single click: true
-      Topic: /clicked_point
     - Class: mappr_rviz/Add_Viewpoint
-      Name: Viewpoint
+      Name: viewpoint
   Value: true
   Views:
     Current:
@@ -136,5 +124,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 2560
-  X: 0
-  Y: 0
+  X: -2
+  Y: 13
