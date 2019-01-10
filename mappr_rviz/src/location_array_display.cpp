@@ -40,6 +40,7 @@ QColor boyton[9] = {
 
 void LocationArrayDisplay::processMessage(const mappr_msgs::LocationArray::ConstPtr& msg)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   for (mappr_msgs::Location lcmsg : msg->locations)
   {
     auto lc = locations_.find(lcmsg.label);
@@ -64,6 +65,7 @@ void LocationArrayDisplay::processMessage(const mappr_msgs::LocationArray::Const
 
 void LocationArrayDisplay::slotLabelSize()
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   for (const auto& kv : locations_)
   {
     kv.second->setCharacterHeight(labelSize_->getFloat());
@@ -72,6 +74,7 @@ void LocationArrayDisplay::slotLabelSize()
 
 void LocationArrayDisplay::slotShowLabels()
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   for (const auto& kv : locations_)
   {
     kv.second->setShowLabel(showLabels_->getBool());

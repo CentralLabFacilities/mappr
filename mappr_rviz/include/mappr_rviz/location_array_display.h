@@ -7,6 +7,8 @@
 #include "rviz/message_filter_display.h"
 #endif
 
+#include <mutex>
+
 namespace Ogre
 {
 class SceneNode;
@@ -44,7 +46,9 @@ private:
   rviz::BoolProperty* showLabels_;
   rviz::FloatProperty* labelSize_;
 
+  std::mutex mutex_;
   std::map<std::string, std::unique_ptr<LocationVisual> > locations_;
+
   int curColor_{ 0 };
 };
 }  // namespace viz

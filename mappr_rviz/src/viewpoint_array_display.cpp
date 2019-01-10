@@ -41,14 +41,16 @@ void ViewpointArrayDisplay::reset()
 
 void ViewpointArrayDisplay::processMessage(const mappr_msgs::ViewpointArray::ConstPtr& msg)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
+
   for (mappr_msgs::Viewpoint vpmsg : msg->viewpoints)
   {
     auto vp = viewpoints_.find(vpmsg.label);
     if (vp != viewpoints_.end())
     {
+      vp->second->setCharacterHeight(labelSize_->getFloat());
       vp->second->setMessage(vpmsg);
       vp->second->setShowLabel(showLabels_->getBool());
-      vp->second->setCharacterHeight(labelSize_->getFloat());
     }
     else
     {
@@ -60,6 +62,7 @@ void ViewpointArrayDisplay::processMessage(const mappr_msgs::ViewpointArray::Con
 
 void ViewpointArrayDisplay::slotLabelSize()
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   for (const auto& kv : viewpoints_)
   {
     kv.second->setCharacterHeight(labelSize_->getFloat());
@@ -68,6 +71,7 @@ void ViewpointArrayDisplay::slotLabelSize()
 
 void ViewpointArrayDisplay::slotShowLabels()
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   for (const auto& kv : viewpoints_)
   {
     kv.second->setShowLabel(showLabels_->getBool());

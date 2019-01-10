@@ -1,3 +1,3 @@
 Header header
 string label
-Pose2D[] polygon
+geometry_msgs/Pose2D[] polygon

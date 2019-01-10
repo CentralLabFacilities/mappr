@@ -64,6 +64,8 @@ public:
     QString message_type = QString::fromStdString(ros::message_traits::datatype<MessageType>());
     topic_property_->setMessageType(message_type);
     topic_property_->setDescription(message_type + " topic to subscribe to.");
+
+    sub_.registerCallback(boost::bind(&TopicDisplay<MessageType>::incomingMessage, this, _1));
   }
 
   void onInitialize() override
@@ -111,7 +113,6 @@ protected:
         transport_hint = ros::TransportHints().unreliable();
       }
       sub_.subscribe(update_nh_, topic_property_->getTopicStd(), 10, transport_hint);
-      sub_.registerCallback(boost::bind(&TopicDisplay<MessageType>::incomingMessage, this, _1));
       setStatus(rviz::StatusProperty::Warn, "Topic", "no msgs");
     }
     catch (ros::Exception& e)

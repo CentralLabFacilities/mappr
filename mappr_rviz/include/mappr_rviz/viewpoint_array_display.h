@@ -7,6 +7,8 @@
 #include "mappr_rviz/topic_display.h"
 #endif
 
+#include <mutex>
+
 namespace Ogre
 {
 class SceneNode;
@@ -44,6 +46,7 @@ private:
   rviz::BoolProperty* showLabels_;
   rviz::FloatProperty* labelSize_;
 
+  std::mutex mutex_;
   std::map<std::string, std::unique_ptr<ViewpointVisual> > viewpoints_;
 };
 }  // namespace viz
