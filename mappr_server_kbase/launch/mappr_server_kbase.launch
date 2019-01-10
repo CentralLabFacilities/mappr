@@ -2,11 +2,11 @@
 
 <launch>
     <arg name="rviz_config" default="annotation_minimal_conf.rviz"/>
-    <arg name="kbase_config" default="kbase_empty_db_config.yaml"/>
+    <arg name="kbase_config_path" default="$(find knowledge_base)/useful_files/kbase_empty_db_config.yaml"/>
 
      <!-- start kbase -->
     <include file="$(find knowledge_base)/launch/kbase.launch">
-        <arg name="path_to_config" value="$(find knowledge_base)/useful_files/$(arg kbase_config)"/>
+        <arg name="path_to_config" value="$(arg kbase_config_path)"/>
     </include>
 
     <!-- Start mappr_server_kbase -->
