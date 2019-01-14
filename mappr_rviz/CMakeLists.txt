@@ -16,7 +16,6 @@ catkin_package(
   CATKIN_DEPENDS mappr_msgs
 )
 
-include_directories(${catkin_INCLUDE_DIRS} )
 link_directories(${catkin_LIBRARY_DIRS})
 
 ## QT
@@ -27,6 +26,9 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 ## Etc
 include_directories(include)
+include_directories(${catkin_INCLUDE_DIRS} )
+
+
 
 ###########
 ## Build ##
