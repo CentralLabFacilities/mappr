@@ -26,12 +26,3 @@ include_directories(${catkin_INCLUDE_DIRS})
 install(DIRECTORY rviz_config
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )
-install(DIRECTORY models
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-        )
-install(DIRECTORY worlds
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-        )
-install(DIRECTORY robots
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-        )
