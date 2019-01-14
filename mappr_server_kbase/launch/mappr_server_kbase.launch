@@ -2,7 +2,7 @@
 
 <launch>
     <arg name="rviz_config" default="annotation_minimal_conf.rviz"/>
-    <arg name="kbase_config_path" default="$(find knowledge_base)/useful_files/kbase_empty_db_config.yaml"/>
+    <arg name="kbase_config_path" default="$(find robocup_data)/knowledgeBase/configs/empty_tmp_db.yaml"/>
 
      <!-- start kbase -->
     <include file="$(find knowledge_base)/launch/kbase.launch">
