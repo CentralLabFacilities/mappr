@@ -170,12 +170,15 @@ def handle_add_viewpoint_to_fake_room(req):
 
     room = Room.from_xml(child)
 
-    for vp in room.annotation.viewpoints:
-        if vp.label == vp_msg.label:
-            rospy.logerr("Could not add viewpoint since it already exists! Use the change viewpoint service to update "
-                         "it")
-            error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.BDO_ALREADY_EXISTS)
-            return UpdateViewpointResponse(success=False, error=error)
+# Temporary workaround: re-saving existing vps is allowed since updating is not implemented in the plugin yet.
+# TODO: Remove after updating viewpoints is implemented
+    
+#    for vp in room.annotation.viewpoints:
+#        if vp.label == vp_msg.label:
+#            rospy.logerr("Could not add viewpoint since it already exists! Use the change viewpoint service to update "
+#                         "it")
+#            error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.BDO_ALREADY_EXISTS)
+#            return UpdateViewpointResponse(success=False, error=error)
 
     room.annotation.viewpoints.append(vp_obj)
 
