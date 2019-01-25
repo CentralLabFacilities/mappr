@@ -11,4 +11,9 @@
 
     <!-- Start mappr_server_kbase -->
     <node name="mappr_server_kbase" pkg="mappr_server_kbase" type="server.py" output="screen" />
+
+    <!-- Start rviz -->
+    <node type="rviz" name="rviz" pkg="rviz" args="--display-config $(find mappr_data)/rviz_config/$(arg rviz_config)" />
+
+
 </launch>
