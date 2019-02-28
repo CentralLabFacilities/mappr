@@ -1,4 +1,3 @@
-from setuptools import find_packages
 from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
@@ -11,7 +10,8 @@ setup_args = generate_distutils_setup(
     author='David Leins',
     author_email='dleins@techfak.uni-bielefeld.de',
     license='Apache 2.0',
-    packages=find_packages()
+    packages=['mappr_server_kbase'],
+    package_dir={'': 'src'}
 )
 
 setup(**setup_args)

@@ -252,7 +252,6 @@ def create_ubiquitous_fake_room():
 
 
 def mappr_service_server():
-    rospy.init_node('mappr_service_server')
 
     rospy.loginfo("Trying to save arena fake room")
     success, error_code = create_ubiquitous_fake_room()
@@ -343,6 +342,7 @@ def publish_current_viewpoints(room):
 
 
 if __name__ == "__main__":
+    rospy.init_node('mappr_service_server')
 
     tries = 0
     kbase_found = False
