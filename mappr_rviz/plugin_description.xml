@@ -23,5 +23,11 @@
       Create new Viewpoint.
     </description>
   </class>
+
+  <class name="mappr_rviz/Add_Location" type="mappr::viz::LocationAddTool" base_class_type="rviz::Tool">
+    <description>
+      Create new Location.
+    </description>
+  </class>
   
 </library>

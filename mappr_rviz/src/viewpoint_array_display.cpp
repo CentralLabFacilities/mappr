@@ -6,6 +6,8 @@
 #include <rviz/properties/bool_property.h>
 #include <rviz/properties/float_property.h>
 
+#include "mappr_rviz/interactive_node.h"
+
 namespace mappr
 {
 namespace viz
@@ -32,6 +34,7 @@ ViewpointArrayDisplay::ViewpointArrayDisplay()
 void ViewpointArrayDisplay::onInitialize()
 {
   TDClass::onInitialize();
+  //InteractiveNode* inode = new InteractiveNode(context_->getSceneManager());
 }
 
 void ViewpointArrayDisplay::reset()
@@ -47,7 +50,6 @@ void ViewpointArrayDisplay::processMessage(const mappr_msgs::ViewpointArray::Con
     ROS_DEBUG_STREAM(kv.first);
   }
 
-
   for (mappr_msgs::Viewpoint vpmsg : msg->viewpoints)
   {
     auto vp = viewpoints_.find(vpmsg.label);
@@ -59,7 +61,8 @@ void ViewpointArrayDisplay::processMessage(const mappr_msgs::ViewpointArray::Con
     }
     else
     {
-      viewpoints_[vpmsg.label] = std::make_unique<ViewpointVisual>(context_->getSceneManager(), scene_node_, vpmsg, showLabels_->getBool(), labelSize_->getFloat());
+      viewpoints_[vpmsg.label] = std::make_unique<ViewpointVisual>(context_->getSceneManager(), scene_node_, vpmsg,
+                                                                   showLabels_->getBool(), labelSize_->getFloat());
     }
   }
 }
