@@ -20,12 +20,19 @@
 #include <rviz/display_context.h>
 #include <rviz/properties/string_property.h>
 
+#include <mappr_msgs/Location.h>
+#include <mappr_msgs/UpdateLocation.h>
+
 namespace mappr
 {
 namespace viz
 {
 LocationAddTool::LocationAddTool() : Tool()
 {
+  shortcut_key_ = 'l';
+
+  name_property_ = new rviz::StringProperty("Name", "location", "The name of the location.", getPropertyContainer(),
+                                            SLOT(updateName()), this);
 }
 LocationAddTool::~LocationAddTool()
 {
@@ -35,6 +42,13 @@ LocationAddTool::~LocationAddTool()
 
 void LocationAddTool::onInitialize()
 {
+  setName("Add Location");
+  updateName();
+
+  auto topic = "/mappr_server/add_location";
+  client_ = nh_.serviceClient<mappr_msgs::UpdateLocation>(topic);
+  ROS_INFO_STREAM("LocationAddTool connecting to " << topic);
+
   auto parent_node = scene_manager_->getRootSceneNode();
   lines_node_ = parent_node->createChildSceneNode();
   lines_node_->setVisible(false);
@@ -92,7 +106,26 @@ int LocationAddTool::processMouseEvent(rviz::ViewportMouseEvent& event)
 void LocationAddTool::onFinish(std::list<Ogre::Vector3> points)
 {
   // send new location
-  std::cout << "finished" << std::endl;
+  mappr_msgs::Location location;
+
+  location.header.frame_id = context_->getFixedFrame().toStdString();
+  location.header.stamp = ros::Time::now();
+
+  location.label = name_property_->getStdString();
+
+  for (auto ogre_point : points) {
+    geometry_msgs::Point point;
+    point.x = ogre_point.x;
+    point.y = ogre_point.y;
+    point.z = ogre_point.z;
+    location.polygon.push_back(point);
+  }
+
+  mappr_msgs::UpdateLocation srv;
+  srv.request.location = location;
+
+  ROS_INFO_STREAM("add location:\n" << location);
+  client_.call(srv);
 }
 
 void LocationAddTool::finish() {
@@ -104,6 +137,7 @@ void LocationAddTool::addPoint(Ogre::Vector3 point)
 {
   clicked_points_.push_back(point);
   state_ = Add;
+  setStatus("Click startpoint to finish the Location.");
 }
 
 void LocationAddTool::deletePoint()
