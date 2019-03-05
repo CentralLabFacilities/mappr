@@ -18,7 +18,9 @@
 #include <rviz/properties/parse_color.h>
 #include <rviz/viewport_mouse_event.h>
 #include <rviz/display_context.h>
+
 #include <rviz/properties/string_property.h>
+#include <rviz/properties/bool_property.h>
 
 #include <mappr_msgs/Location.h>
 #include <mappr_msgs/UpdateLocation.h>
@@ -32,7 +34,9 @@ LocationAddTool::LocationAddTool() : Tool()
   shortcut_key_ = 'l';
 
   name_property_ = new rviz::StringProperty("Name", "location", "The name of the location.", getPropertyContainer(),
-                                            SLOT(updateName()), this);
+                                            SLOT(updateName()), this); 
+
+  is_room_property_ = new rviz::BoolProperty("is Room", false, "Location is a Room?.", getPropertyContainer(),  SLOT(slotIsRoom()), this);
 }
 LocationAddTool::~LocationAddTool()
 {
@@ -112,6 +116,7 @@ void LocationAddTool::onFinish(std::list<Ogre::Vector3> points)
   location.header.stamp = ros::Time::now();
 
   location.label = name_property_->getStdString();
+  location.is_room = is_room_property_->getBool();
 
   for (auto ogre_point : points) {
     geometry_msgs::Point point;
@@ -199,6 +204,11 @@ void LocationAddTool::updateName()
 {
   // Only lowercase names
   name_property_->setString(name_property_->getString().toLower());
+}
+
+void LocationAddTool::slotIsRoom()
+{
+  // nop
 }
 
 }  // namespace viz

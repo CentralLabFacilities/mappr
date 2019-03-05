@@ -14,6 +14,7 @@ namespace rviz
 {
 class DisplayContext;
 class StringProperty;
+class BoolProperty;
 }  // namespace rviz
 
 namespace Ogre
@@ -60,12 +61,15 @@ protected:
 
 private Q_SLOTS:
   void updateName();
+  void slotIsRoom();
+  
 
 private:
   ros::NodeHandle nh_;
   ros::ServiceClient client_;
 
   rviz::StringProperty* name_property_;
+  rviz::BoolProperty* is_room_property_;
 
   Ogre::SceneNode* lines_node_{ nullptr };
   std::list<Ogre::Vector3> clicked_points_;
