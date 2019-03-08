@@ -19,6 +19,8 @@ ViewpointAddTool::ViewpointAddTool()
 
   name_property_ = new rviz::StringProperty("Name", "viewpoint", "The name of the viewpoint.", getPropertyContainer(),
                                             SLOT(updateName()), this);
+  parent_name_property_ = new rviz::StringProperty("Parent room/location", "arena", "The name of the parent room or location.", getPropertyContainer(),
+                                            SLOT(updateParent()), this);
 }
 
 void ViewpointAddTool::onInitialize()
@@ -39,6 +41,12 @@ void ViewpointAddTool::updateName()
   name_property_->setString(name_property_->getString().toLower());
 }
 
+void ViewpointAddTool::updateParent()
+{
+  // Only lowercase names
+  parent_name_property_->setString(parent_name_property_->getString().toLower());
+}
+
 void ViewpointAddTool::onPoseSet(double x, double y, double theta)
 {
   mappr_msgs::Viewpoint viewpoint;
@@ -47,6 +55,7 @@ void ViewpointAddTool::onPoseSet(double x, double y, double theta)
   viewpoint.header.stamp = ros::Time::now();
 
   viewpoint.label = name_property_->getStdString();
+  viewpoint.parent_location_name = parent_name_property_->getStdString();
   viewpoint.pose.x = x;
   viewpoint.pose.y = y;
   viewpoint.pose.theta = theta;

@@ -34,11 +34,13 @@ protected:
 
 private Q_SLOTS:
   void updateName();
+  void updateParent();
 
 private:
   ros::NodeHandle nh_;
   ros::ServiceClient client_;
   rviz::StringProperty* name_property_;
+  rviz::StringProperty* parent_name_property_;
 };
 
 }  // viz
