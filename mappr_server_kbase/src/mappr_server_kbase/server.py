@@ -127,8 +127,8 @@ def handle_update_viewpoint_in_fake_room(req):
     return UpdateViewpointResponse(success=True)
 
 
-def handle_add_viewpoint_to_fake_room(req):
-    """Adds new viewpoint to arena room.
+def handle_add_viewpoint(req):
+    """Adds new viewpoint to nearest location/room.
 
     Returns a failed state if a viewpoint with this name already exists.
 
@@ -147,31 +147,35 @@ def handle_add_viewpoint_to_fake_room(req):
 
     vp_obj = Viewpoint(label=vp_msg.label, positiondata=vp_position)
 
-    child, error = get_fake_ubiquitous_room()
+    child, error = get_location(vp_msg.parent_location_name)
 
+    parent_loc = None
     if not child:
-        rospy.logerr("arena room could not be retrieved from database! Aborting save")
-        return UpdateViewpointResponse(success=False, error=error)
-
-    room = Room.from_xml(child)
+        child, error = get_room(vp_msg.parent_location_name)
+        if not child:
+            rospy.logerr("Could not find parent room/location by name %s" % vp_msg.parent_location_name)
+            return UpdateLocationResponse(success=False, error=error)
+        parent_loc = Room.from_xml_local(child)
+    else:
+        parent_loc = Location.from_xml_local(child)
 
 # Temporary workaround: re-saving existing vps is allowed since updating is not implemented in the plugin yet.
 # TODO: Remove after updating viewpoints is implemented
     
-    for vp in room.annotation.viewpoints:
+    for vp in parent_loc.annotation.viewpoints:
         if vp.label == vp_msg.label:
-            room.annotation.viewpoints.remove(vp)
+            parent_loc.annotation.viewpoints.remove(vp)
 #            rospy.logerr("Could not add viewpoint since it already exists! Use the change viewpoint service to update "
 #                         "it")
 #            error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.BDO_ALREADY_EXISTS)
 #            return UpdateViewpointResponse(success=False, error=error)
 
-    room.annotation.viewpoints.append(vp_obj)
+    parent_loc.annotation.viewpoints.append(vp_obj)
 
     rospy.wait_for_service('/KBase/data')
     try:
         saving = rospy.ServiceProxy('/KBase/data', Data)
-        res = saving('remember %s' % ET.tostring(room.to_xml()))
+        res = saving('remember %s' % ET.tostring(parent_loc.to_xml_local()))
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
         error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
@@ -182,7 +186,7 @@ def handle_add_viewpoint_to_fake_room(req):
         error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
         return UpdateViewpointResponse(success=False, error=error)
 
-    publish_current_location_vps(room)
+    publish_current_location_vps(parent_loc)
 
     return UpdateViewpointResponse(success=True)
 
@@ -275,7 +279,7 @@ def handle_add_location(req):
     if loc_msg.is_room:
         location = Room(name=loc_msg.label, annotation=location_annotation, numberofdoors=0)
         rospy.loginfo("Trying to get fetch room %s" % loc_msg.label)
-        child, error = get_room(location)
+        child, error = get_room(location.name)
     else:
         child, error = get_fake_ubiquitous_room()
         if not child:
@@ -285,7 +289,7 @@ def handle_add_location(req):
         room = Room.from_xml(child)
         location = Location(name=loc_msg.label, annotation=location_annotation, room=room)
         rospy.loginfo("Trying to get fetch location %s" % loc_msg.label)
-        child, error = get_location(location)
+        child, error = get_location(location.name)
 
     if child:
         rospy.loginfo("location already in DB")
@@ -325,7 +329,7 @@ def mappr_service_server():
     vp_fake_add = rospy.Service(
         '/mappr_server/add_viewpoint',
         mappr_msgs.srv.UpdateViewpoint,
-        handle_add_viewpoint_to_fake_room
+        handle_add_viewpoint
     )
 
     vp_fake_update = rospy.Service(
@@ -367,11 +371,11 @@ def mappr_service_server():
             break
 
 
-def get_location(location):
+def get_location(location_name):
     rospy.wait_for_service('/KBase/query')
     try:
         query = rospy.ServiceProxy('/KBase/query', Query)
-        res = query('which location name %s' % location.name)
+        res = query('which location name %s' % location_name)
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
         error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_READ_FROM_DB)
@@ -383,17 +387,17 @@ def get_location(location):
 
     for child in tree:
         if child.tag == 'LOCATION':
-            rospy.logdebug("found location %s in DB" % location.name)
+            rospy.logdebug("found location %s in DB" % location_name)
             return child, 0
         error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.LOCATION_NOT_FOUND)
     return None, error
 
 
-def get_room(room):
+def get_room(room_name):
     rospy.wait_for_service('/KBase/query')
     try:
         query = rospy.ServiceProxy('/KBase/query', Query)
-        res = query('which room name %s' % room.name)
+        res = query('which room name %s' % room_name)
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
         error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_READ_FROM_DB)
@@ -405,7 +409,7 @@ def get_room(room):
 
     for child in tree:
         if child.tag == 'ROOM':
-            rospy.logdebug("found room %s in DB" % room.name)
+            rospy.logdebug("found room %s in DB" % room_name)
             return child, 0
         error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.ROOM_NOT_FOUND)
     return None, error
