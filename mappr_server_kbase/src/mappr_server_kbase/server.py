@@ -19,27 +19,12 @@ viewpoint_array_pub = rospy.Publisher(
     latch=True
 )
 
-
-def handle_add_location(req):
-    """
-
-    :param req:
-    :type req: UpdateLocationRequest
-    :return:
-    """
-
-    poly = [Point2d(point.x, point.y) for point in req.location.polygon]
-    annotation = Annotation(polygon=poly)
-
-    annotation.label('room:' % req.location.label)
-    room = Room(annotation=annotation)
-
-    annotation.label('location:' % req.location.label)
-    loc = Location(annotation=annotation)
-
-    # TODO: Continue
-
-    return UpdateLocationResponse(False)
+location_array_pub = rospy.Publisher(
+    '/mappr_server/current_locations',
+    mappr_msgs.msg.LocationArray,
+    queue_size=1,
+    latch=True
+)
 
 
 def handle_remove_viewpoint_from_fake_room(req):
@@ -83,7 +68,7 @@ def handle_remove_viewpoint_from_fake_room(req):
         error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
         return UpdateViewpointResponse(success=False, error=error)
 
-    publish_current_viewpoints(room)
+    publish_current_location_vps(room)
 
     return UpdateViewpointResponse(success=True)
 
@@ -137,7 +122,7 @@ def handle_update_viewpoint_in_fake_room(req):
         error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
         return UpdateViewpointResponse(success=False, error=error)
 
-    publish_current_viewpoints(room)
+    publish_current_location_vps(room)
 
     return UpdateViewpointResponse(success=True)
 
@@ -197,7 +182,7 @@ def handle_add_viewpoint_to_fake_room(req):
         error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
         return UpdateViewpointResponse(success=False, error=error)
 
-    publish_current_viewpoints(room)
+    publish_current_location_vps(room)
 
     return UpdateViewpointResponse(success=True)
 
@@ -218,7 +203,7 @@ def create_ubiquitous_fake_room():
 
     if not child and error.code is not mappr_msgs.msg.MapprError.UBIQ_ROOM_NOT_FOUND:
         rospy.logerr("Error while trying to read from DB! Aborting save")
-        return None, error.code
+        return UpdateLocationResponse(success=False, error=error)
 
     # Create fake 1x1 meters room
     # Last point has to be first point again
@@ -240,19 +225,97 @@ def create_ubiquitous_fake_room():
         res = saving('remember %s' % ET.tostring(fake_room.to_xml()))
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
-        return False, mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
+        return UpdateLocationResponse(success=False, error=error)
 
     if not res.success:
         rospy.logerr("Service call failed!")
-        return False, mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
+        return UpdateLocationResponse(success=False, error=error)
 
-    publish_current_viewpoints(fake_room)
+    publish_current_location_vps(fake_room)
 
     return True, 0
 
 
-def mappr_service_server():
+def handle_add_location(req):
+    """Check if location to be added already exists and if not create it.
 
+    :param req: UpdateLocationRequest
+    :return: Whether saving was successful or not.
+    """
+
+    rospy.logerr("Handling add location")
+    loc_msg = req.location  # type: mappr_msgs.msg.Location
+
+    # Construct polygon (first element is also last element)
+    poly = []
+    mean_x = 0
+    mean_y = 0
+
+    for point in loc_msg.polygon:
+        poly.append([point.x, point.y])
+        mean_x += point.x
+        mean_y += point.y
+    mean_x = mean_x / len(loc_msg.polygon)
+    mean_y = mean_y / len(loc_msg.polygon)
+    poly.append([loc_msg.polygon[0].x, loc_msg.polygon[0].y])
+
+    # Construct label
+    label = "room:%s" % loc_msg.label if not loc_msg.is_room else "location:%s" % loc_msg.label
+
+    vp_main_position = Positiondata(
+        frameid=loc_msg.header.frame_id,
+        point2d=Point2d(mean_x, mean_y),
+        theta=0.0
+    )
+    vp_main = Viewpoint(label='main', positiondata=vp_main_position)
+    location_annotation = Annotation(label=label, polygon=[poly], viewpoints=[vp_main])
+
+    if loc_msg.is_room:
+        location = Room(name=loc_msg.label, annotation=location_annotation, numberofdoors=0)
+        rospy.loginfo("Trying to get fetch room %s" % loc_msg.label)
+        child, error = get_room(location)
+    else:
+        child, error = get_fake_ubiquitous_room()
+        if not child:
+            error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.UBIQ_ROOM_NOT_FOUND)
+            return UpdateLocationResponse(success=False, error=error)
+
+        room = Room.from_xml(child)
+        location = Location(name=loc_msg.label, annotation=location_annotation, room=room)
+        rospy.loginfo("Trying to get fetch location %s" % loc_msg.label)
+        child, error = get_location(location)
+
+    if child:
+        rospy.loginfo("location already in DB")
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.BDO_ALREADY_EXISTS)
+        return UpdateLocationResponse(success=False, error=error)
+
+    if not child and (error.code is not mappr_msgs.msg.MapprError.ROOM_NOT_FOUND or
+                      error.code is not mappr_msgs.msg.MapprError.LOCATION_NOT_FOUND):
+        rospy.logerr("Error while trying to read from DB! Aborting save")
+        return UpdateLocationResponse(False, error)
+
+    rospy.wait_for_service('/KBase/data')
+    try:
+        saving = rospy.ServiceProxy('/KBase/data', Data)
+        res = saving('remember %s' % ET.tostring(location.to_xml()))
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: %s" % e)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
+        return UpdateLocationResponse(success=False, error=error)
+
+    if not res.success:
+        rospy.logerr("Service call failed!")
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_WRITE_TO_DB)
+        return UpdateLocationResponse(success=False, error=error)
+
+    error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.NO_ERROR)
+    return UpdateLocationResponse(success=True, error=error)
+
+
+def mappr_service_server():
     rospy.loginfo("Trying to save arena fake room")
     success, error_code = create_ubiquitous_fake_room()
     if not success:
@@ -277,22 +340,91 @@ def mappr_service_server():
         handle_remove_viewpoint_from_fake_room
     )
 
-    # location_add = rospy.Service('add_location', mappr_msgs.srv.UpdateLocation, handle_add_location)
+    location_add = rospy.Service(
+        '/mappr_server/add_location',
+        mappr_msgs.srv.UpdateLocation,
+        handle_add_location
+    )
+
     rospy.loginfo("Server is ready")
 
-    rate = rospy.Rate(0.2)  # 0.2hz
+    rate = rospy.Rate(1)  # 1hz
     while not rospy.is_shutdown():
-        child, error_code = get_fake_ubiquitous_room()
+        locations, rooms, error = get_all_locations()
 
-        if child is None:
-            rospy.logerr("arena room could not be retrieved from database! Can not publish viewpoints")
-
-        room = Room.from_xml(child)
-        publish_current_viewpoints(room)
+        rospy.loginfo("Locs %s" % len(locations))
+        rospy.loginfo("Rooms %s" % len(rooms))
+        for room in rooms:
+            rospy.loginfo("Publishing room %s" % room.name)
+            publish_current_location_vps(room)
+        for loc in locations:
+            rospy.loginfo("Publishing location %s" % loc.name)
+            publish_current_location_vps(loc)
+        publish_current_locations(locations, rooms)
         try:
             rate.sleep()
         except rospy.exceptions.ROSInterruptException:
             break
+
+
+def get_location(location):
+    rospy.wait_for_service('/KBase/query')
+    try:
+        query = rospy.ServiceProxy('/KBase/query', Query)
+        res = query('which location name %s' % location.name)
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: %s" % e)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_READ_FROM_DB)
+        return None, error
+
+    tree = ET.fromstring(res.answer.encode('utf-8'))
+
+    error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.NO_ERROR)
+
+    for child in tree:
+        if child.tag == 'LOCATION':
+            rospy.logdebug("found location %s in DB" % location.name)
+            return child, 0
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.LOCATION_NOT_FOUND)
+    return None, error
+
+
+def get_room(room):
+    rospy.wait_for_service('/KBase/query')
+    try:
+        query = rospy.ServiceProxy('/KBase/query', Query)
+        res = query('which room name %s' % room.name)
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: %s" % e)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_READ_FROM_DB)
+        return None, error
+
+    tree = ET.fromstring(res.answer.encode('utf-8'))
+
+    error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.NO_ERROR)
+
+    for child in tree:
+        if child.tag == 'ROOM':
+            rospy.logdebug("found room %s in DB" % room.name)
+            return child, 0
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.ROOM_NOT_FOUND)
+    return None, error
+
+
+def get_all_locations():
+    rospy.wait_for_service('/KBase/query')
+    try:
+        query = rospy.ServiceProxy('/KBase/query', Query)
+        res = query('get arena')
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: %s" % e)
+        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.COULD_NOT_READ_FROM_DB)
+        return None, None, error
+
+    rospy.logdebug("Retrieved all locations. Returning deserialized locations and rooms")
+    arena = Arena.from_xml_local(ET.fromstring(res.answer.encode('utf-8')))
+
+    return arena.locations, arena.rooms, 0
 
 
 def get_fake_ubiquitous_room():
@@ -317,23 +449,75 @@ def get_fake_ubiquitous_room():
     return None, error
 
 
-def publish_current_viewpoints(room):
-    """Publish all viewpoints of the given room as viewpoint array.
+def publish_current_locations(locations, rooms):
+    """Publish all locations and rooms as location array.
 
-    :param room: Room containing the viewpoints
-    :type room: Room
+    :param locations: locations to publish
+    :type locations: list of Location
+    :param rooms: rooms to publish
+    :type rooms: list of Room
+    :return: None
+    """
+    location_msgs = []
+
+    for loc in locations:
+        loc_msg = mappr_msgs.msg.Location()
+        loc_msg.label = loc.name
+        loc_msg.is_room = False
+        if loc.annotation.polygon:
+            poly = []
+            polygon = loc.annotation.polygon
+            if type(polygon) == dict:  # the polygon was loaded from database
+                # omit last point which is also the first one (geojson specific stuff)
+                for point in polygon['coordinates'][0][:-1]:
+                    poly.append(geometry_msgs.msg.Point(x=point[0], y=point[1], z=0))
+            elif type(polygon) == list:  # the polygon was created "manually"
+                for point in polygon[0][:-1]:  # omit last point wich is also the first one (geojson specific stuff)
+                    poly.append(geometry_msgs.msg.Point(x=point[0], y=point[1], z=0))
+
+            loc_msg.polygon = poly
+        location_msgs.append(loc_msg)
+
+    for loc in rooms:
+        loc_msg = mappr_msgs.msg.Location()
+        loc_msg.label = loc.name
+        loc_msg.is_room = False
+
+        if loc.annotation.polygon:
+            poly = []
+            polygon = loc.annotation.polygon
+            if type(polygon) == dict:  # the polygon was loaded from database
+                # omit last point which is also the first one (geojson specific stuff)
+                for point in polygon['coordinates'][0][:-1]:
+                    poly.append(geometry_msgs.msg.Point(x=point[0], y=point[1], z=0))
+            elif type(polygon) == list:  # the polygon was created "manually"
+                for point in polygon[0][:-1]:  # omit last point wich is also the first one (geojson specific stuff)
+                    poly.append(geometry_msgs.msg.Point(x=point[0], y=point[1], z=0))
+
+            loc_msg.polygon = poly
+        location_msgs.append(loc_msg)
+
+    location_array_pub.publish(mappr_msgs.msg.LocationArray(location_msgs))
+
+
+def publish_current_location_vps(location):
+    """Publish all viewpoints of the given location as viewpoint array.
+
+    :param location: location that contains viewpoints to publish
+    :type location: Room or Location
     :return: None
     """
     viewpoints = []
 
-    for vp in room.annotation.viewpoints:
+    for vp in location.annotation.viewpoints:
+        rospy.loginfo("\t contains vp named: %s" % vp.label)
         pose_2d = geometry_msgs.msg.Pose2D(
             x=vp.positiondata.point2d.x,
             y=vp.positiondata.point2d.y,
             theta=vp.positiondata.theta
         )
 
-        vp_msg = mappr_msgs.msg.Viewpoint(label=vp.label, parent_location_name=room.name, pose=pose_2d)
+        vp_msg = mappr_msgs.msg.Viewpoint(label=vp.label, parent_location_name=location.name, pose=pose_2d)
         vp_msg.header.frame_id = vp.positiondata.frameid
 
         viewpoints.append(vp_msg)
