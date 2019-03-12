@@ -278,8 +278,13 @@ def handle_add_location(req):
 
     if loc_msg.is_room:
         location = Room(name=loc_msg.label, annotation=location_annotation, numberofdoors=0)
-        rospy.loginfo("Trying to get fetch room %s" % loc_msg.label)
+        rospy.loginfo("Trying to fetch room %s" % loc_msg.label)
         child, error = get_room(location.name)
+        unused, error2 = get_location(location.name)
+        if error2.code is not mappr_msgs.msg.MapprError.LOCATION_NOT_FOUND:
+            rospy.logerr("%s already exists as location. A room with the same name is not allowed" % loc_msg.label)
+            error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.NAMING_VIOLATION)
+            return UpdateLocationResponse(success=False, error=error)
     else:
         child, error = get_fake_ubiquitous_room()
         if not child:
@@ -290,6 +295,11 @@ def handle_add_location(req):
         location = Location(name=loc_msg.label, annotation=location_annotation, room=room)
         rospy.loginfo("Trying to get fetch location %s" % loc_msg.label)
         child, error = get_location(location.name)
+        unused, error2 = get_room(location.name)
+        if error2.code is not mappr_msgs.msg.MapprError.ROOM_NOT_FOUND:
+            rospy.logerr("%s already exists as room. A location with the same name is not allowed" % loc_msg.label)
+            error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.NAMING_VIOLATION)
+            return UpdateLocationResponse(success=False, error=error)
 
     if child:
         rospy.loginfo("location already in DB")
@@ -388,8 +398,9 @@ def get_location(location_name):
     for child in tree:
         if child.tag == 'LOCATION':
             rospy.logdebug("found location %s in DB" % location_name)
-            return child, 0
-        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.LOCATION_NOT_FOUND)
+            return child, error
+    rospy.logerr("MAPPR: LOCATION NOT FOUND!")
+    error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.LOCATION_NOT_FOUND)
     return None, error
 
 
@@ -410,8 +421,9 @@ def get_room(room_name):
     for child in tree:
         if child.tag == 'ROOM':
             rospy.logdebug("found room %s in DB" % room_name)
-            return child, 0
-        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.ROOM_NOT_FOUND)
+            return child, error
+    rospy.logerr("MAPPR: ROOM NOT FOUND!")
+    error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.ROOM_NOT_FOUND)
     return None, error
 
 
