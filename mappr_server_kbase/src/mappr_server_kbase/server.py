@@ -296,9 +296,9 @@ def handle_add_location(req):
         error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.BDO_ALREADY_EXISTS)
         return UpdateLocationResponse(success=False, error=error)
 
-    if not child and (error.code is not mappr_msgs.msg.MapprError.ROOM_NOT_FOUND or
+    if not child and (error.code is not mappr_msgs.msg.MapprError.ROOM_NOT_FOUND and
                       error.code is not mappr_msgs.msg.MapprError.LOCATION_NOT_FOUND):
-        rospy.logerr("Error while trying to read from DB! Aborting save")
+        rospy.logerr("Error while trying to read from DB! Aborting save [Err code: %d]" % error.code)
         return UpdateLocationResponse(False, error)
 
     rospy.wait_for_service('/KBase/data')
