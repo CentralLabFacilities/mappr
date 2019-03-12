@@ -302,9 +302,20 @@ def handle_add_location(req):
             return UpdateLocationResponse(success=False, error=error)
 
     if child:
-        rospy.loginfo("location already in DB")
-        error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.BDO_ALREADY_EXISTS)
-        return UpdateLocationResponse(success=False, error=error)
+        rospy.logerr("Location already in DB")
+        rospy.loginfo("Workaround until updating locations is implemented: Location will be overridden here!")
+        # TODO: Uncomment after updating locations is implemented
+        # error = mappr_msgs.msg.MapprError(mappr_msgs.msg.MapprError.BDO_ALREADY_EXISTS)
+        # return UpdateLocationResponse(success=False, error=error)
+
+        new_poly = location.annotation.polygon
+        if loc_msg.is_room:
+            location = Room.from_xml(child)
+        else:
+            location = Location.from_xml_local(child)
+            location.room = room
+        location.annotation.polygon = new_poly
+        rospy.logerr("MAPPR: UPDATE LOCATION WITH NEW POLYGON")
 
     if not child and (error.code is not mappr_msgs.msg.MapprError.ROOM_NOT_FOUND and
                       error.code is not mappr_msgs.msg.MapprError.LOCATION_NOT_FOUND):
