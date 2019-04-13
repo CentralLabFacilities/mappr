@@ -37,6 +37,7 @@ protected:
 
 private Q_SLOTS:
   void slotShowLabels();
+  void slotShowParent();
   void slotLabelSize();
 
 private:
@@ -44,6 +45,7 @@ private:
 
   mappr_msgs::ViewpointArray::ConstPtr initMsg_;
   rviz::BoolProperty* showLabels_;
+  rviz::BoolProperty* showParent_;
   rviz::FloatProperty* labelSize_;
 
   std::mutex mutex_;

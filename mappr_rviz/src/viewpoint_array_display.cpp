@@ -15,7 +15,9 @@ namespace viz
 ViewpointArrayDisplay::ViewpointArrayDisplay()
 {
   showLabels_ = new rviz::BoolProperty("show Labels", true, "Draw the Labels.", this, SLOT(slotShowLabels()));
+  showParent_ = new rviz::BoolProperty("show Parent Location", false, "Prefix label with Parent Location", this, SLOT(slotShowParent()));
   labelSize_ = new rviz::FloatProperty("Label size", 0.5, "Character Height of TextLabel", this, SLOT(slotLabelSize()));
+  
 
   /* TODO
   - remove deleted vps and locations
@@ -52,7 +54,8 @@ void ViewpointArrayDisplay::processMessage(const mappr_msgs::ViewpointArray::Con
 
   for (mappr_msgs::Viewpoint vpmsg : msg->viewpoints)
   {
-    auto vp = viewpoints_.find(vpmsg.label);
+    auto uuid = vpmsg.label + vpmsg.parent_location_name;
+    auto vp = viewpoints_.find(uuid);
     if (vp != viewpoints_.end())
     {
       vp->second->setCharacterHeight(labelSize_->getFloat());
@@ -61,8 +64,8 @@ void ViewpointArrayDisplay::processMessage(const mappr_msgs::ViewpointArray::Con
     }
     else
     {
-      viewpoints_[vpmsg.label] = std::make_unique<ViewpointVisual>(context_->getSceneManager(), scene_node_, vpmsg,
-                                                                   showLabels_->getBool(), labelSize_->getFloat());
+      viewpoints_[uuid] = std::make_unique<ViewpointVisual>(context_->getSceneManager(), scene_node_, vpmsg,
+                                                                   showLabels_->getBool(), showParent_->getBool(), labelSize_->getFloat());
     }
   }
 }
@@ -82,6 +85,15 @@ void ViewpointArrayDisplay::slotShowLabels()
   for (const auto& kv : viewpoints_)
   {
     kv.second->setShowLabel(showLabels_->getBool());
+  }
+}
+
+void ViewpointArrayDisplay::slotShowParent()
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  for (const auto& kv : viewpoints_)
+  {
+    kv.second->setShowParent(showParent_->getBool());
   }
 }
 

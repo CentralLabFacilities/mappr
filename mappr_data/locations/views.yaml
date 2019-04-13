@@ -6,13 +6,7 @@ viewpoints:
       nsecs: 0   
     frame_id: ''
   label: 'blub'   
-  parent_location:
-    label: ''
-    polygon:
-    - x: 0.0
-      y: 0.0
-      z: 0.0      
-    is_room: false
+  parent_location_name: a
   pose:   
     x: 0.0
     y: 0.0    
@@ -23,14 +17,20 @@ viewpoints:
       secs: 0 
       nsecs: 0  
     frame_id: '' 
+  label: 'blub' 
+  parent_location_name: b
+  pose:   
+    x: 1.0                                                                                                        
+    y: 1.0                                                                                                        
+    theta: 0.0
+- header: 
+    seq: 0
+    stamp:   
+      secs: 0 
+      nsecs: 0  
+    frame_id: '' 
   label: 'blub_2' 
-  parent_location:
-    label: ''
-    polygon:
-    - x: 0.0
-      y: 0.0
-      z: 0.0      
-    is_room: false
+  parent_location_name: c
   pose:   
     x: 2.0                                                                                                        
     y: 3.0                                                                                                        

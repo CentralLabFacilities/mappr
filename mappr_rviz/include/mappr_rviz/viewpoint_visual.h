@@ -27,12 +27,13 @@ class ViewpointVisual
 {
 public:
   ViewpointVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node, mappr_msgs::Viewpoint msg,
-                  bool show = true, float char_heigth = 0.5);
+                  bool show = true, bool parent = true, float char_heigth = 0.5);
   ~ViewpointVisual();
 
   // Configure the visual to show the data in the message.
   void setMessage(const mappr_msgs::Viewpoint msg);
   void setShowLabel(const bool show);
+  void setShowParent(const bool show);
   void setCharacterHeight(const float size);
 
 private:
@@ -43,7 +44,9 @@ private:
   Ogre::SceneManager* scene_manager_{ nullptr };
   rviz::MovableText* text_{ nullptr };
 
+  mappr_msgs::Viewpoint msg_;
   float text_size_;
+  bool showParent_;
   std::string viewpointRes_{ "package://mappr_rviz/media/viewpoint.dae" };
 };
 }  // namespace viz
