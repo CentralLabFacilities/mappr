@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 import mappr_msgs.msg
 import geometry_msgs.msg
 from mappr_msgs.srv import *
-from KnowledgeBase.Classes import *
+from knowledge_base.Classes import *
 
 viewpoint_array_pub = rospy.Publisher(
     '/mappr_server/current_viewpoints',
