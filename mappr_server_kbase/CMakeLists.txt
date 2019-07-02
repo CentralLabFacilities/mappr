@@ -5,12 +5,13 @@ project(mappr_server_kbase)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   mappr_msgs
+  knowledge_base
 )
 
 catkin_python_setup()
 
 catkin_package(
-   CATKIN_DEPENDS rospy mappr_msgs
+   CATKIN_DEPENDS rospy mappr_msgs knowledge_base
 )
 
 include_directories(${catkin_INCLUDE_DIRS})
